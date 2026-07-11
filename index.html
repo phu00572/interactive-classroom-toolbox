@@ -71,18 +71,50 @@
     .map-card .mc-title { font-size:0.5em; font-weight:700; color:var(--accent2); margin:8px 0 4px; }
     .map-card .mc-desc  { font-size:0.38em; color:#bbb; line-height:1.6; }
 
-    /* Q&A */
+    /* Q&A 問題卡（用於左側全域側邊欄，故用 px 不用 em）*/
     .qa-item {
       background:rgba(255,255,255,0.06); border-left:3px solid var(--accent);
-      border-radius:8px; padding:10px 14px; margin-bottom:8px; font-size:0.42em;
-      display:flex; align-items:center; gap:12px;
+      border-radius:8px; padding:10px 12px; margin-bottom:8px; font-size:14px;
+      display:flex; align-items:center; gap:10px;
     }
     .qa-text { flex:1; color:#eee; line-height:1.5; text-align:left; }
     .qa-like {
       flex:0 0 auto; background:rgba(232,100,58,0.15); border:1px solid rgba(232,100,58,0.4);
-      color:var(--accent); border-radius:20px; padding:4px 12px; cursor:pointer;
-      font-size:0.9em; font-family:inherit; white-space:nowrap;
+      color:var(--accent); border-radius:20px; padding:4px 10px; cursor:pointer;
+      font-size:13px; font-family:inherit; white-space:nowrap;
     }
+
+    /* === 全域匿名提問牆側邊欄（每一頁都可從左側拉開）=== */
+    #qa-sidebar {
+      position:fixed; top:0; left:0; height:100vh; width:340px;
+      background:linear-gradient(180deg,#141a2e,#0d1117);
+      border-right:1px solid rgba(79,195,247,0.25);
+      box-shadow:6px 0 30px rgba(0,0,0,0.55);
+      transform:translateX(-100%); transition:transform .35s ease;
+      z-index:1000;
+    }
+    @media (max-width:380px){ #qa-sidebar{ width:300px; } }
+    #qa-sidebar.open { transform:translateX(0); }
+    #qa-sidebar .qa-inner {
+      display:flex; flex-direction:column; height:100%;
+      padding:26px 20px; box-sizing:border-box;
+    }
+    #qa-handle {
+      position:absolute; right:-46px; top:50%; transform:translateY(-50%);
+      width:46px; padding:18px 0; background:var(--accent); color:#fff;
+      border:none; border-radius:0 12px 12px 0; cursor:pointer;
+      display:flex; flex-direction:column; align-items:center; gap:6px;
+      font-family:inherit; box-shadow:3px 0 12px rgba(0,0,0,0.4);
+    }
+    #qa-handle .qh-dot {
+      width:7px; height:7px; border-radius:50%; background:#fff;
+      animation:pulse 1.5s infinite;
+    }
+    #qa-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,0.45);
+      opacity:0; pointer-events:none; transition:opacity .35s; z-index:999;
+    }
+    #qa-overlay.show { opacity:1; pointer-events:auto; }
 
     /* 白板工具列 */
     .wb-swatch { width:26px; height:26px; border-radius:50%; cursor:pointer; border:2px solid rgba(255,255,255,0.3); }
@@ -163,25 +195,18 @@
       <div style="font-size:0.38em; color:#666; text-align:center; margin-top:0.8em;">已投票：<span id="poll-total">0</span> 人（可重複點改票）</div>
     </section>
 
-    <!-- 5. 提問牆 Q&A（左側欄版）-->
+    <!-- 5. 提問牆說明頁（實際提問牆是全域左側 Sidebar，每頁都可拉開）-->
     <section id="slide-qa">
-      <div style="display:grid; grid-template-columns:360px 1fr; gap:32px; height:490px;">
-        <!-- 左側欄：提問牆 -->
-        <div style="display:flex; flex-direction:column; border-right:1px solid rgba(255,255,255,0.12); padding-right:26px;">
-          <div class="qhead" style="font-size:0.78em; margin-bottom:0.5em;">🙋 匿名提問牆<span class="live-badge">LIVE</span></div>
-          <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
-            <input id="qa-input" class="ui-input" type="text" placeholder="輸入問題，按 Enter…" maxlength="80" />
-            <button id="qa-btn" class="ui-btn">送出提問</button>
-          </div>
-          <div id="qa-list" data-prevent-swipe style="flex:1; overflow-y:auto; padding-right:6px;"></div>
-          <div style="font-size:0.3em; color:#666; margin-top:8px;">👍 幫想問的按讚，票高自動排到最前</div>
-        </div>
-        <!-- 右側：引導問句 -->
-        <div style="display:flex; flex-direction:column; justify-content:center; text-align:left;">
-          <div style="font-size:0.42em; color:var(--accent); font-weight:700; letter-spacing:0.14em; margin-bottom:0.5em;">Q &amp; A WALL</div>
-          <h2 style="font-size:1.7em; line-height:1.25; margin-bottom:0.5em; color:#fff;">有什麼<br>想問的？</h2>
-          <p style="font-size:0.46em; color:#bbb; line-height:2;">不用舉手、不用具名。<br>把問題丟上左邊的牆，<br>其他人也想知道就幫你按讚，<br>讚數高的自動浮到最上面 ——<br>講者一眼就知道先回答哪一題。</p>
-        </div>
+      <div style="text-align:center;">
+        <div style="font-size:0.4em; color:var(--accent); font-weight:700; letter-spacing:0.16em; margin-bottom:0.6em;">Q &amp; A WALL · 全程開放</div>
+        <h2 style="font-size:1.6em; color:#fff; margin-bottom:0.5em;">🙋 隨時從左側拉開提問牆</h2>
+        <p style="font-size:0.5em; color:#bbb; line-height:2; max-width:760px; margin:0 auto;">
+          不只這一頁 —— <b style="color:var(--accent2);">任何一頁</b>都能點畫面最左邊的
+          <span style="background:var(--accent); color:#fff; padding:3px 12px; border-radius:6px; white-space:nowrap;">🙋 提問牆</span>
+          把手，滑出側邊欄留下你的問題。<br>其他人覺得也想問就按讚，讚數高的自動排到最上面。
+        </p>
+        <button onclick="window.toggleQA && window.toggleQA(true)" class="ui-btn" style="margin-top:1.3em; font-size:0.5em; padding:12px 30px;">👈 現在就打開提問牆試試</button>
+        <div style="margin-top:1em; font-size:0.34em; color:#666;">講者可隨時拉開查看累積的問題，不必切回這一頁</div>
       </div>
     </section>
 
@@ -246,6 +271,29 @@
 
   </div>
 </div>
+
+<!-- ===== 全域匿名提問牆側邊欄（每一頁都可從左側拉開）===== -->
+<div id="qa-overlay"></div>
+<aside id="qa-sidebar" data-prevent-swipe>
+  <button id="qa-handle" aria-label="開關提問牆">
+    <span style="font-size:19px;">🙋</span>
+    <span style="writing-mode:vertical-rl; letter-spacing:3px; font-weight:700; font-size:14px;">提問牆</span>
+    <span class="qh-dot"></span>
+  </button>
+  <div class="qa-inner">
+    <div style="font-size:19px; font-weight:700; color:var(--accent2); margin-bottom:16px;">
+      🙋 匿名提問牆 <span class="live-badge">LIVE</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+      <input id="qa-input" class="ui-input" type="text" placeholder="輸入問題，按 Enter…" maxlength="80" />
+      <button id="qa-btn" class="ui-btn">送出提問</button>
+    </div>
+    <div id="qa-list" style="flex:1; overflow-y:auto; padding-right:4px;"></div>
+    <div style="font-size:12px; color:#666; margin-top:10px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+      👍 幫你想問的按讚，票高的自動排到最前
+    </div>
+  </div>
+</aside>
 
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script>
@@ -383,6 +431,18 @@
     ).join('') : '<div style="color:#555;text-align:center;padding:20px;font-size:0.42em;">還沒有問題，當第一個發問的人 🙋</div>';
   });
   function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  /* 側邊欄開關（全域，每一頁都能拉開）*/
+  const qaSidebar = document.getElementById('qa-sidebar');
+  const qaOverlay = document.getElementById('qa-overlay');
+  window.toggleQA = function(force){
+    const open = (force !== undefined) ? force : !qaSidebar.classList.contains('open');
+    qaSidebar.classList.toggle('open', open);
+    qaOverlay.classList.toggle('show', open);
+    if (open) setTimeout(()=>document.getElementById('qa-input')?.focus(), 300);
+  };
+  document.getElementById('qa-handle')?.addEventListener('click', ()=>window.toggleQA());
+  qaOverlay?.addEventListener('click', ()=>window.toggleQA(false));
 
   /* ---------- ④ 共享白板 ---------- */
   const boardRef = collection(fdb, SLUG + '_board');
