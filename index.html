@@ -310,6 +310,7 @@
     getFirestore, collection, addDoc, onSnapshot, serverTimestamp,
     query, orderBy, doc, setDoc, updateDoc, increment, getDocs, deleteDoc
   } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+  import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
 
   const firebaseConfig = {
     apiKey: "AIzaSyBPaIDGb3RaYhxYrXVE_6YndLUi2jLv1R4",
@@ -321,6 +322,8 @@
   };
   const app = initializeApp(firebaseConfig);
   const fdb = getFirestore(app);
+  const auth = getAuth(app);
+  try { await signInAnonymously(auth); } catch(e){ console.error('匿名登入失敗', e); }
   const SLUG = 'toolbox';
   const COLORS = ['#4fc3f7','#e8643a','#ffb74d','#81c784','#ce93d8','#80deea','#f48fb1'];
 
