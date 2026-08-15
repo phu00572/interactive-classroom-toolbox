@@ -548,6 +548,35 @@
     ['touchstart','touchmove','touchend'].forEach(ev =>
       el.addEventListener(ev, e => e.stopPropagation(), { passive: false }));
   });
+
+  /* ---------- 網頁內重置（取代 clear_data.py）----------
+     App Check 強制後純 REST 清理會被 403 擋；改用頁面內已通過 App Check + 匿名登入的 SDK 刪資料。
+     只有網址帶 ?reset=1 時右下角才出現重置鈕；學員看不到。 */
+  window.resetToolbox = async function(){
+    const cols = [SLUG+'_wordcloud', SLUG+'_qa', SLUG+'_board'];
+    let del = 0;
+    for(const c of cols){
+      try{ const s = await getDocs(collection(fdb, c)); await Promise.all(s.docs.map(d=>deleteDoc(d.ref))); del += s.size; }
+      catch(e){ console.error('清除 '+c+' 失敗', e); }
+    }
+    try{ await deleteDoc(doc(fdb, SLUG+'_poll', 'results')); }catch(_){}   // 重置投票
+    return del;
+  };
+  if(new URLSearchParams(location.search).has('reset')){
+    const b = document.createElement('button');
+    b.id = 'reset-btn'; b.textContent = '🗑 重置本場資料';
+    b.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:1200;padding:11px 16px;'+
+      'background:rgba(220,53,69,.92);color:#fff;border:none;border-radius:24px;font-weight:800;'+
+      'font-size:14px;font-family:inherit;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.5)';
+    b.addEventListener('click', async ()=>{
+      if(!confirm('確定清空本場所有互動資料（文字雲／投票／提問牆／白板）？此動作無法復原。')) return;
+      b.disabled = true; b.textContent = '清除中…';
+      try{ const n = await window.resetToolbox(); b.textContent = '✔ 已清除 '+n+' 筆'; }
+      catch(e){ console.error(e); b.textContent = '✘ 失敗（見 F12）'; }
+      b.disabled = false; setTimeout(()=>{ b.textContent = '🗑 重置本場資料'; }, 2600);
+    });
+    document.body.appendChild(b);
+  }
 </script>
 
 </body>
